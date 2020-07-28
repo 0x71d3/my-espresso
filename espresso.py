@@ -6,9 +6,6 @@ import sys
 
 from pyknp import Juman
 
-
-jumanpp = Juman()
-
 all_pos_tags = [
     '*', '特殊', '動詞', '形容詞', '判定詞', '助動詞', '名詞', '指示詞',
     '副詞', '助詞', '接続詞', '連体詞', '感動詞', '接頭辞', '接尾辞', '未定義語'
@@ -18,6 +15,8 @@ half2full = str.maketrans(
     '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
     '０１２３４５６７８９ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ！”＃＄％＆’（）＊＋，－．／：；＜＝＞？＠［＼］＾＿‘｛｜｝～',
 )
+
+jumanpp = Juman()
 
 x_label = '_x'
 y_label = '_y'
@@ -72,24 +71,6 @@ def get_pattern_freq(x=None, p=None, y=None):
     return pattern_freq
 
 
-'''def get_pmi(i, p):
-    x, y = i
-    # print('(i, p) =', (i, p))
-
-    xpy_freq = get_pattern_freq(x, p, y)      # |x, p, y|
-    xy_freq = get_pattern_freq(x, None, y)    # |x, *, y|
-    p_freq = get_pattern_freq(None, p, None)  # |*, p, *|
-    # print('(|x, p, y|, |x, *, y|, |*, p, *|) =', (xpy_freq, xy_freq, p_freq))
-
-    sentence_num = len(sentences)
-    pmi = (math.log(xpy_freq / (xy_freq * p_freq) * sentence_num)
-        if xpy_freq > 0 else 0
-    )
-    print('pmi({}, \'{}\') = {}'.format(i, p, pmi))
-
-    return pmi'''
-
-
 def set_pmi(i, p):
     global pmis
 
@@ -105,7 +86,7 @@ def set_pmi(i, p):
     pmi = (math.log(xpy_freq / (xy_freq * p_freq) * sentence_num)
         if xpy_freq > 0 else 0
     )
-    print('pmi({}, \'{}\') = {}'.format(i, p, pmi))
+    # print('pmi({}, \'{}\') = {}'.format(i, p, pmi))
 
     if i not in pmis:
         pmis[i] = {}
@@ -278,16 +259,15 @@ def instance_extraction(tau=0.3, m=200):
 
 num_sentences = 20000
 
-with open('xaa', encoding='utf-8') as f:
-    lines = f.readlines()
-    for i in range(0, min(num_sentences * 2, len(lines)), 2):
-        sentence = lines[i].strip().translate(half2full)
-        sentences.add(sentence)
+with open('xaf', encoding='utf-8') as f:
+    for line in f:
+        sentence, pos_tags = line.strip().split('\t')
 
-        pos_tag_dict[sentence] = lines[i+1].strip()
+        sentences.add(sentence)
+        pos_tag_dict[sentence] = pos_tags
 
 # read seeds from a csvfile
-with open('seeds.csv', encoding='utf-8') as csvfile:
+with open('seeds.csv', encoding='utf-8', newline='') as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         instance = ()
@@ -323,7 +303,7 @@ for i in range(3):
     print()
 
     print('- Instance extraction')
-    instance_extraction()
+    instance_extraction(0.1)
 
     print('I =', instances)
     print()
@@ -331,7 +311,7 @@ for i in range(3):
 print('Result:')
 print('I =', instances)
 
-with open('output.csv', 'w', encoding='utf-8') as csvfile:
+with open('output.csv', 'w', encoding='utf-8', newline='') as csvfile:
     writer = csv.writer(csvfile)
     for instance in sorted(instances):
         writer.writerow(list(instance))
