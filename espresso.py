@@ -11,11 +11,6 @@ all_pos_tags = [
     '副詞', '助詞', '接続詞', '連体詞', '感動詞', '接頭辞', '接尾辞', '未定義語'
 ]
 
-half2full = str.maketrans(
-    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
-    '０１２３４５６７８９ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ！”＃＄％＆’（）＊＋，－．／：；＜＝＞？＠［＼］＾＿‘｛｜｝～',
-)
-
 jumanpp = Juman()
 
 x_label = '_x'
@@ -257,17 +252,24 @@ def instance_extraction(tau=0.3, m=200):
     instances = set(sorted_instances[:m])
 
 
-num_sentences = 20000
+seeds_file = sys.argv[1]
+output_file = sys.argv[2]
 
+# read sentences
 with open('xaf', encoding='utf-8') as f:
-    for line in f:
-        sentence, pos_tags = line.strip().split('\t')
+    data = [line.strip().split('\t') for line in f]
 
-        sentences.add(sentence)
-        pos_tag_dict[sentence] = pos_tags
+data.sort(key=lambda p: len(p[0]))
+
+# 5% of all sentences
+num_sentences = len(data) // 20
+
+for sentence, pos_tags in data[:num_sentences]:
+    sentences.add(sentence)
+    pos_tag_dict[sentence] = pos_tags
 
 # read seeds from a csvfile
-with open('seeds.csv', encoding='utf-8', newline='') as csvfile:
+with open(seeds_file, encoding='utf-8', newline='') as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         instance = ()
@@ -281,16 +283,18 @@ with open('seeds.csv', encoding='utf-8', newline='') as csvfile:
 for i in instances:
     instance_reliabilities[i] = 1.0
 
+print('Initial:')
 print('I =', instances)
 print()
 
 k = 0
 
+# Espresso
 for i in range(3):
     print('Iteration {}:'.format(i + 1))
     print()
 
-    print('- Pattern induction')
+    print(i + 1, '- Pattern induction')
     pattern_induction()
 
     print('P =', patterns)
@@ -298,11 +302,11 @@ for i in range(3):
 
     k = k + 1 if k else len(patterns)
 
-    print('- Pattern ranking/selection')
+    print(i + 1, '- Pattern ranking/selection')
     pattern_ranking(k)
     print()
 
-    print('- Instance extraction')
+    print(i + 1, '- Instance extraction')
     instance_extraction(0.1)
 
     print('I =', instances)
@@ -311,7 +315,7 @@ for i in range(3):
 print('Result:')
 print('I =', instances)
 
-with open('output.csv', 'w', encoding='utf-8', newline='') as csvfile:
+with open(output_file, 'w', encoding='utf-8', newline='') as csvfile:
     writer = csv.writer(csvfile)
     for instance in sorted(instances):
         writer.writerow(list(instance))
