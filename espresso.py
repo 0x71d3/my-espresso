@@ -261,8 +261,8 @@ with open('xaf', encoding='utf-8') as f:
 
 data.sort(key=lambda p: len(p[0]))
 
-# 5% of all sentences
-num_sentences = len(data) // 20
+# 2% of all sentences
+num_sentences = len(data) // 50
 
 for sentence, pos_tags in data[:num_sentences]:
     sentences.add(sentence)
@@ -307,7 +307,7 @@ for i in range(3):
     print()
 
     print(i + 1, '- Instance extraction')
-    instance_extraction(0.1)
+    instance_extraction(0.0)
 
     print('I =', instances)
     print()
